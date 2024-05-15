@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { Switch, Typography } from '@mui/material';
 
@@ -8,6 +8,7 @@ function App() {
   const [volume, setVolume] = useState(1);
   const [power, setPower] = useState(true);
   const [selectedSoundGroup, setSelectedSoundGroup] = useState('heaterKit');
+  const audioRefs = useRef({});
 
   const firstSoundsGroup = [
     {
@@ -140,6 +141,7 @@ const secondSoundsGroup = [
     setDisplayText(`${soundsName[selectedSoundGroup]}`);
   };
 
+  /*
   const loadSound = (keyCode) => {
     try {
       const pad = soundsGroup[selectedSoundGroup].find((pad) => pad.keyCode === keyCode);
@@ -154,11 +156,11 @@ const secondSoundsGroup = [
       return null;
     }
   };
-  
-
-  const playSound = (keyCode) => {
+  */
+  /*
+  const playSound = (key) => {
     try {
-      const audio = loadSound(keyCode);
+      const audio = audioRefs.current[key];
       if (audio) {
         audio.play();
       }
@@ -166,8 +168,19 @@ const secondSoundsGroup = [
       console.error('Error al reproducir el sonido:', error);
     }
   };
+*/
+
+  const playSound = (key) => {
+    const audio = audioRefs.current[key];
+    if (audio && power) {
+      audio.currentTime = 0;
+      audio.volume = volume;
+      audio.play();
+    }
+  };
 
 
+  /*
   const handleDrumPadClick = (drumPad) => {
     if (power) {
       playSound(drumPad.keyCode);
@@ -175,7 +188,14 @@ const secondSoundsGroup = [
       console.log(drumPad.key);
     }
   };
+  */
 
+  const handleDrumPadClick = (drumPad) => {
+    playSound(drumPad.key);
+    setDisplayText(drumPad.id);
+  };
+
+  /*
   const handleKeyDown = (e) => {
     if (power) {
       const keyCode = e.keyCode;
@@ -186,6 +206,15 @@ const secondSoundsGroup = [
       } else {
         console.log("no se encuentra el pad")
       }
+    }
+  };
+  */
+
+  const handleKeyDown = (e) => {
+    const pad = soundsGroup[selectedSoundGroup].find((pad) => pad.keyCode === e.keyCode);
+    if (pad && power) {
+      playSound(pad.key);
+      setDisplayText(pad.id);
     }
   };
   
@@ -206,7 +235,7 @@ const secondSoundsGroup = [
       document.removeEventListener('keydown', handleKeyDown);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [power]);
+  }, [power, selectedSoundGroup]);
 
   return (
     <div id="drum-machine">
@@ -218,7 +247,7 @@ const secondSoundsGroup = [
             id={drumPad.key}
             onClick={() => handleDrumPadClick(drumPad)}
           >
-            <audio className='clip' id={drumPad.key} src={drumPad.url}></audio>
+            <audio className='clip' id={drumPad.key} src={drumPad.url} ref={el => audioRefs.current[drumPad.key] = el}></audio>
             {console.log(document.querySelectorAll('audio'))}
             {drumPad.key}
           </div>
